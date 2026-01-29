@@ -20,6 +20,49 @@ Guidelines for coding agents working in this repository during a workshop that d
 - Keep code Pythonic and consistent with current style; add only minimal, high‑value comments.
 - Avoid introducing new dependencies unless requested; if needed, explain tradeoffs.
 
+## Coding Guidelines
+* **File naming (nodes)**
+    * Use snake_case for node files.
+    * A node named "DB Handler" must be saved as `src/nodes/db_handler.py`.
+* **Where to put files**
+    * Place node implementations in `src/nodes/`.
+* **Style**
+    * Follow PEP 8.
+    * Use Google Style docstrings.
+* **Node structure**
+    * Every node must be a class with `__call__(self, state, config)`.
+    * Log the state at the start of each node to keep visibility on every input.
+    * Keep `__call__` short; move work into submethods and call them inside `__call__`.
+* **Example**
+    ```python
+    import logging
+
+    class DbHandler:
+        """Handles database read/write for expenses."""
+
+        def __call__(self, state, config):
+            """Run the node.
+
+            Args:
+                state: Current workflow state.
+                config: Node configuration.
+
+            Returns:
+                Updated workflow state.
+            """
+            logging.info("DbHandler input state=%s", state)
+            expense = self._normalize(state)
+            return self._persist(expense, config)
+
+        def _normalize(self, state):
+            """Normalize incoming state into an expense object."""
+            return state
+
+        def _persist(self, expense, config):
+            """Write the expense and return updated state."""
+            return expense
+    ```
+
 ## Demo checkpoints
 - Bootstrapping: locate entry points and current bot wiring.
 - Workflow: implement or connect LangGraph nodes/edges with clear step names.
