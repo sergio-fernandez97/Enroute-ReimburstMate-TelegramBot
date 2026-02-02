@@ -10,6 +10,15 @@
     - If the username is available you will receive a confirmation. Get your token and store it into an environment variable named `TELEGRAM_BOT_TOKEN` (create an .env file with this variable). Also you can acces to the bot's chat through the provided linK, in this case: t.me/enroute_reimburse_bot. 
 3. Now your able to use your bot!
 
+## 1.y Run tests
+```bash
+python -m unittest
+```
+Or with uv:
+```bash
+uv run python -m unittest
+```
+
 ## 2. Connect Codex to an MCP server (Context7)
 Context7 is a free MCP server for developer documentation.
 
@@ -86,15 +95,9 @@ codex mcp add context7 -- npx -y @upstash/context7-mcp
 * **Role**: Communication layer 💬
 * **What it does**
     * Converts agent state into a user-friendly response
-    * Formats:
-        * text
-        * Slack blocks
-        * buttons (Submit / Edit)
-    * Posts message to Slack
+    * Posts message to Telegram
 * **Why it exists**
-    * UX belongs in one place, not spread across tools.
-* **Nice line for the workshop**
-    * “This node turns reasoning into user trust.”
+> UX belongs in one place, not spread across tools.
 
 #### 2.6 END
 * **Role**: Explicit termination

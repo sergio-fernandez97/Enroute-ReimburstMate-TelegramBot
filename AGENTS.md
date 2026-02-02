@@ -33,6 +33,12 @@ Guidelines for coding agents working in this repository during a workshop that d
     * Every node must be a class with `__call__(self, state, config)`.
     * Log the state at the start of each node to keep visibility on every input.
     * Keep `__call__` short; move work into submethods and call them inside `__call__`.
+* **Testing**
+    * When a node becomes functional (not a placeholder), add a unit test under `./tests`.
+    * Pattern:
+      * Create `tests/test_<node_name>.py`.
+      * Arrange a minimal `WorkflowState`, call the node, and assert the expected state fields.
+      * Test several cases. 
 * **Example**
     ```python
     import logging
