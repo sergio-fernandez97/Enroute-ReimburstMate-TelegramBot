@@ -27,13 +27,6 @@ logger = logging.getLogger(__name__)
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 
 
-def _extract_response_text(result: object) -> str | None:
-    """Extract response_text from a graph result payload."""
-    if isinstance(result, dict):
-        return result.get("response_text")
-    return getattr(result, "response_text", None)
-
-
 # ==================== COMMAND HANDLERS ====================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

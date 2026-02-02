@@ -1,0 +1,14 @@
+{
+  "is_receipt": false,
+  "merchant_name": null,
+  "merchant_address": null,
+  "receipt_date": null,
+  "receipt_time": null,
+  "currency": null,
+  "subtotal": null,
+  "tax": null,
+  "tip": null,
+  "total": null,
+  "payment_method": null,
+  "items": null
+}

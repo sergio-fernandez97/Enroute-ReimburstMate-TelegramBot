@@ -1,0 +1,39 @@
+{
+  "is_receipt": true,
+  "merchant_name": "Uber",
+  "merchant_address": null,
+  "receipt_date": "2025-11-16",
+  "receipt_time": "14:59",
+  "currency": "MXN",
+  "subtotal": null,
+  "tax": null,
+  "tip": null,
+  "total": 197.97,
+  "payment_method": "Amex",
+  "items": [
+    {
+      "description": "Trip fare",
+      "quantity": 1.0,
+      "unit_price": 235.45,
+      "line_total": 235.45
+    },
+    {
+      "description": "Booking Fee",
+      "quantity": 1.0,
+      "unit_price": 24.66,
+      "line_total": 24.66
+    },
+    {
+      "description": "User Adjustment due to Labor Law",
+      "quantity": 1.0,
+      "unit_price": 6.34,
+      "line_total": 6.34
+    },
+    {
+      "description": "Discounts and Adjustments",
+      "quantity": 1.0,
+      "unit_price": -68.48,
+      "line_total": -68.48
+    }
+  ]
+}

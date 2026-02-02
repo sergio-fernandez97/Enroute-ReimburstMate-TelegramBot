@@ -30,7 +30,7 @@ Guidelines for coding agents working in this repository during a workshop that d
     * Follow PEP 8.
     * Use Google Style docstrings.
 * **Node structure**
-    * Every node must be a class with `__call__(self, state, config)`.
+    * Every node must be a class with `__call__(self, state)`.
     * Log the state at the start of each node to keep visibility on every input.
     * Keep `__call__` short; move work into submethods and call them inside `__call__`.
 * **Testing**
