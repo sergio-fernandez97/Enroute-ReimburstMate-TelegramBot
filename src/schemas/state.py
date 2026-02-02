@@ -12,6 +12,18 @@ class WorkflowState(BaseModel):
         default=None,
         description="Telegram user identifier for the requesting user.",
     )
+    username: str | None = Field(
+        default=None,
+        description="Telegram username for the requesting user."
+    )
+    first_name: str | None = Field(
+        default=None,
+        description="Telegram first name for the requesting user."
+    )
+    last_name: str | None = Field(
+        default=None,
+        description="Telegram last name for the requesting user."
+    )
     next_action: str | None = Field(
         default=None,
         description="Routing hint or node name for the next workflow step.",

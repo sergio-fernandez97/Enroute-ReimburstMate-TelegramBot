@@ -5,7 +5,7 @@ from src.schemas.state import WorkflowState
 
 
 class ExtractReceipt:
-    """Extracts structured data from receipt images or PDFs."""
+    """Extracts structured data from receipt images."""
 
     def __call__(self, state: WorkflowState, config: Dict[str, Any]) -> WorkflowState:
         """Run the node.
