@@ -5,9 +5,13 @@ Supports Python 3.8+
 
 import logging
 import os
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+
+from src.db import init_db_from_env
+from src.tools.minio_storage import get_minio_client, upload_bytes
 
 load_dotenv()
 
@@ -84,6 +88,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     """Handle text messages."""
     user_id = update.effective_user.id
     user_name = update.effective_user.first_name or "User"
+    user_last_name = update.effective_user.last_name or "User"
     text = update.message.text
     
     # Update stats
@@ -96,7 +101,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     response = f"""
     ✅ Got your text message!
     
-    👤 From: {user_name}
+    👤 From: {user_name} {user_last_name}
     📝 Length: {len(text)} characters
     💬 Preview: {text[:100]}{'...' if len(text) > 100 else ''}
     """
@@ -132,128 +137,29 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     Use /get_image to download the original
     """
     await update.message.reply_text(response)
-    
+
     # Store file_id for later retrieval if needed
     context.user_data['last_photo_id'] = file_id
 
+    try:
+        file = await context.bot.get_file(file_id)
+        file_bytes = await file.download_as_bytearray()
+        content_type = file.mime_type or "image/jpeg"
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        object_name = f"telegram/{update.effective_user.id}/{timestamp}_{file_id}.jpg"
 
-async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle document messages."""
-    user_name = update.effective_user.first_name or "User"
-    
-    # Update stats
-    context.user_data['document_count'] = context.user_data.get('document_count', 0) + 1
-    
-    document = update.message.document
-    file_id = document.file_id
-    file_name = document.file_name or "Unnamed file"
-    file_size = document.file_size
-    mime_type = document.mime_type or "Unknown"
-    
-    logger.info(f"Document from {user_name}: {file_name}, size: {file_size} bytes")
-    
-    # Get caption if provided
-    caption = update.message.caption or "No caption"
-    
-    response = f"""
-    📄 Got your document!
-    
-    📋 Filename: {file_name}
-    📦 File size: {file_size / 1024:.2f} KB
-    🏷️ Type: {mime_type}
-    📝 Caption: {caption}
-    
-    Use /get_document to download the file
-    """
-    await update.message.reply_text(response)
-    
-    # Store file_id for later retrieval if needed
-    context.user_data['last_document_id'] = file_id
-    context.user_data['last_document_name'] = file_name
-
-
-async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle video messages."""
-    user_name = update.effective_user.first_name or "User"
-    
-    video = update.message.video
-    file_name = video.file_name or "Video file"
-    file_size = video.file_size
-    duration = video.duration
-    width = video.width
-    height = video.height
-    mime_type = video.mime_type or "Unknown"
-    
-    logger.info(f"Video from {user_name}: {file_name}")
-    
-    duration_mins = duration // 60
-    duration_secs = duration % 60
-    
-    response = f"""
-    🎥 Got your video!
-    
-    📋 Filename: {file_name}
-    📦 File size: {file_size / (1024*1024):.2f} MB
-    ⏱️ Duration: {duration_mins}:{duration_secs:02d}
-    📐 Resolution: {width}x{height}
-    🏷️ Type: {mime_type}
-    """
-    await update.message.reply_text(response)
-
-
-async def handle_audio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle audio messages."""
-    user_name = update.effective_user.first_name or "User"
-    
-    audio = update.message.audio
-    file_name = audio.file_name or "Audio file"
-    file_size = audio.file_size
-    duration = audio.duration
-    performer = audio.performer or "Unknown"
-    title = audio.title or "Unknown"
-    mime_type = audio.mime_type or "Unknown"
-    
-    logger.info(f"Audio from {user_name}: {file_name}")
-    
-    duration_mins = duration // 60
-    duration_secs = duration % 60
-    
-    response = f"""
-    🎵 Got your audio!
-    
-    📋 Filename: {file_name}
-    📦 File size: {file_size / 1024:.2f} KB
-    ⏱️ Duration: {duration_mins}:{duration_secs:02d}
-    🎤 Performer: {performer}
-    🎶 Title: {title}
-    🏷️ Type: {mime_type}
-    """
-    await update.message.reply_text(response)
-
-
-async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle voice messages."""
-    user_name = update.effective_user.first_name or "User"
-    
-    voice = update.message.voice
-    file_size = voice.file_size
-    duration = voice.duration
-    mime_type = voice.mime_type or "Unknown"
-    
-    logger.info(f"Voice message from {user_name}, duration: {duration}s")
-    
-    duration_mins = duration // 60
-    duration_secs = duration % 60
-    
-    response = f"""
-    🎙️ Got your voice message!
-    
-    📦 File size: {file_size / 1024:.2f} KB
-    ⏱️ Duration: {duration_mins}:{duration_secs:02d}
-    🏷️ Type: {mime_type}
-    """
-    await update.message.reply_text(response)
-
+        client, bucket = get_minio_client()
+        upload_bytes(
+            client,
+            bucket,
+            object_name,
+            bytes(file_bytes),
+            content_type,
+            metadata={"file_id": file_id},
+        )
+        logger.info("Image uploaded to MinIO: %s/%s", bucket, object_name)
+    except Exception as exc:
+        logger.error("Failed to upload image to MinIO: %s", exc)
 
 # ==================== FILE DOWNLOAD HANDLERS ====================
 
@@ -330,12 +236,14 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 
 def main() -> None:
     """Start the bot."""
-    
+
     # Check if token is set
     if not TELEGRAM_BOT_TOKEN :
         print("❌ ERROR: Please set your BOT_TOKEN in the script!")
         print("Get your token from @BotFather on Telegram")
         return
+
+    init_db_from_env()
     
     # Create the Application
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
