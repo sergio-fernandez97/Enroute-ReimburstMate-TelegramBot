@@ -12,8 +12,6 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 from src.db import init_db_from_env
-from src.graph.graph import graph
-from src.schemas.state import WorkflowState
 from src.tools.minio_storage import get_minio_client, upload_bytes
 
 load_dotenv()
@@ -28,7 +26,6 @@ logger = logging.getLogger(__name__)
 # Load bot token from environment variable
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 
-compiled_graph = graph.compile()
 
 def _extract_response_text(result: object) -> str | None:
     """Extract response_text from a graph result payload."""
@@ -97,26 +94,25 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle text messages."""
-    user = update.effective_user
-    user_id = user.id
+    user_id = update.effective_user.id
+    user_name = update.effective_user.first_name or "User"
     text = update.message.text
     
     # Update stats
     context.user_data['text_count'] = context.user_data.get('text_count', 0) + 1
     
     # Log the message
-    logger.info("Text from %s (%s): %s...", user.first_name or "User", user_id, text[:50])
-
-    state = WorkflowState(
-        user_input=text,
-        telegram_user_id=str(user_id),
-        username=user.username,
-        first_name=user.first_name,
-        last_name=user.last_name,
-    )
-    result = compiled_graph.invoke(state.model_dump())
-    response_text = _extract_response_text(result) or "✅ Got it. Thanks!"
-    await update.message.reply_text(response_text)
+    logger.info(f"Text from {user_name} ({user_id}): {text[:50]}...")
+    
+    # Echo back with metadata
+    response = f"""
+    ✅ Got your text message!
+    
+    👤 From: {user_name}
+    📝 Length: {len(text)} characters
+    💬 Preview: {text[:100]}{'...' if len(text) > 100 else ''}
+    """
+    await update.message.reply_text(response)
 
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -167,17 +163,20 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         logger.error("Failed to upload image to MinIO: %s", exc)
         uploaded_file_id = None
 
-    state = WorkflowState(
-        user_input=caption,
-        telegram_user_id=str(user.id),
-        username=user.username,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        file_id=uploaded_file_id,
-    )
-    result = compiled_graph.invoke(state.model_dump())
-    response_text = _extract_response_text(result) or "✅ Image received. Thanks!"
-    await update.message.reply_text(response_text)
+    logger.info(f"Uploaded file id: {uploaded_file_id}")
+
+    width = photo.width
+    height = photo.height
+    response = f"""
+    🖼️ Got your image!
+    
+    📐 Dimensions: {width}x{height} pixels
+    📦 File size: {file_size / 1024:.2f} KB
+    📝 Caption: {caption}
+    
+    Use /get_image to download the original
+    """
+    await update.message.reply_text(response)
 
 # ==================== ERROR HANDLER ====================
 
