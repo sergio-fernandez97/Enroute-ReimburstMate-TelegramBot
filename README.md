@@ -1,123 +1,143 @@
+## Enroute ReimburstMate Bot Workshop
 
-## 1. Setup
-### 1.x Telegram 
+Build a Telegram bot that routes user messages (text + receipts) through a LangGraph workflow. The goal is to show how Codex can accelerate safe, incremental development.
 
-### 1.x.y Get your own bot 
-1. Go to @BotFather and send the commad `/start`, a menu with all commands will be displayed.
-2. Now write the command `\newbot`, this will allow you to configure your own bot. 
-    - First, give a name to the bot (not a username) for instance **Enroute ReinmburstMate Bot**.
-    - Then assign a username  for instance **enroute_reimburse_bot**.
-    - If the username is available you will receive a confirmation. Get your token and store it into an environment variable named `TELEGRAM_BOT_TOKEN` (create an .env file with this variable). Also you can acces to the bot's chat through the provided linK, in this case: t.me/enroute_reimburse_bot. 
-3. Now your able to use your bot!
+## Who this workshop is for
+- Software engineers and technical product/platform teams
+- Anyone comfortable reading code and basic Git
 
-## 1.y Run tests
+This is not an intro to Python or LLM theory.
+
+## Tech stack
+- Python 3.13+
+- LangChain + LangGraph
+- OpenAI API (vision + tools)
+- Telegram API
+- PostgreSQL (optional, SQLite in demos)
+- MinIO (optional, for file storage)
+- Docker
+- Codex (coding assistant)
+
+## Workshop flow (high level)
+1. Prerequisites and repo tour
+2. Codex setup
+3. Telegram bot setup
+4. Review existing structure: schemas, tools, prompts, AGENTS.md
+5. Run the starter bot
+6. Walk the AI workflow diagram and build nodes
+7. Implement the planner (agent plan)
+8. Orchestrate the creation of nodes: `extract_receipt`, `query_status`, `render_and_post`, `upsert_expense`
+9. Compile and test the full graph.
+
+## Prerequisites
+- Python 3.13+
+- A Telegram bot token
+- OpenAI API key
+- Docker 
+
+Optional:
+- PostgreSQL connection string
+- MinIO endpoint + credentials
+
+## Credentials (env vars)
+Create a `.env` file at the repo root:
 ```bash
-python -m unittest
+TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
+OPENAI_API_KEY=your_openai_api_key
+
+# Optional (used if set)
+DATABASE_URL=postgresql://user:password@localhost:5432/reimburstmate
+MINIO_ENDPOINT=http://localhost:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=reimburstmate
 ```
-Or with uv:
+
+## Setup
+
+### 1) Create your Telegram bot
+1. Open Telegram and message `@BotFather`.
+2. Send `/start`, then `/newbot`.
+3. Choose a display name (e.g., "Enroute ReimburstMate Bot").
+4. Choose a username (e.g., `enroute_reimburse_bot`).
+5. Save the token and add it to `TELEGRAM_BOT_TOKEN` in `.env`.
+
+### 2) Install dependencies
+Use your preferred Python toolchain:
 ```bash
-uv run python -m unittest
+# Option A (uv)
+uv sync
+
+# Option B (pip)
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
 ```
 
-## 2. Connect Codex to an MCP server (Context7)
-Context7 is a free MCP server for developer documentation.
+### 3) Run the bot
+```bash
+uv run python app.py
+```
 
+You should see:
+- "Bot is running! Press Ctrl+C to stop."
+
+### 4) (Optional) Connect Codex to Context7
+Context7 is a free MCP server for developer docs.
 ```bash
 codex mcp add context7 -- npx -y @upstash/context7-mcp
-``` 
+```
 
+## Repo map (quick)
+- `app.py`: Telegram bot entry point and handlers
+- `src/graph/`: LangGraph wiring
+- `src/nodes/`: Node implementations
+- `src/schemas/`: Pydantic workflow state
+- `src/tools/`: Tooling (image extraction, MinIO, etc.)
+- `tests/`: Unit tests for nodes
 
-## 3. Agent architecture
+## Agent architecture (overview)
 
-### 3.1 Nodes
-#### 2.1 Agent Plan
-* **Role**: The brain (planner) 🧠
-* **What it does**
-    * Looks at:
-        * user message
-        * current state (what we already know)
-    * Decides what to do next
-    * Outputs a structured decision:
-        * next_action
-        * tool_args
-        * optional message_to_user
+### Agent plan (planner)
+- Role: Brain and router
+- Inputs: user message + current workflow state
+- Outputs: `next_action`, `tool_args`, optional `message_to_user`
 
-* **Typical decisions**
-    * “Extract receipt from files”
-    * “Save expense to database”
-    * “Query expense status”
-    * “Ask the user for missing info”
-    * “We’re done”
+### extract_receipt
+- Role: Vision/perception
+- Inputs: receipt images/PDFs
+- Outputs: `receipt_json`
 
-* Why it exists
-> This is what makes the system agentic instead of a fixed flow.
+### upsert_expense
+- Role: Write to system of record
+- Inputs: validated receipt data
+- Outputs: `expense_id`
 
-#### 2.2 extract_receipt
-* **Role**: Perception (Vision tool) 👁️
-* **What it does**
-    * Takes receipt images or PDFs
-    * Calls a vision-capable model
-    * Extracts structured fields:
-        * merchant
-        * date
-        * total
-        * currency
-        * category
-    * Outputs:
-        * receipt_json
-* **Why it exists**
-> Separates seeing from thinking.
+### query_status
+- Role: Memory retrieval (read DB)
+- Inputs: filters from user message
+- Outputs: `status_rows`
 
-##### 2.3 upsert_expense
-* **Role**: Action (Write to system of record) 🗄️
-* **What it does**
-    * Validates receipt data
-    * Inserts or updates an expense record
-    * Returns an expense_id
-    * Outputs:
-        * expense_id
-* **Why it exists**
-> This is the point where AI affects real business data.
+### render_and_post
+- Role: UX layer for user-facing responses
+- Inputs: workflow state
+- Outputs: Telegram message
 
-#### 2.4 query_status
-* **Role**: Memory retrieval (Read from DB) 🔎
-* **What it does**
-    * Queries the database for:
-        * recent expenses
-        * status (submitted, approved, rejected)
-    * Applies optional filters from user message
-    * Outputs:
-        * status_rows
-* **Why it exists**
-> Agents don’t just create things — they answer questions.
+### END
+- Role: Explicit termination
+- Ends when the task completes or user input is required
 
-#### 2.5 render_and_post
-* **Role**: Communication layer 💬
-* **What it does**
-    * Converts agent state into a user-friendly response
-    * Posts message to Telegram
-* **Why it exists**
-> UX belongs in one place, not spread across tools.
+## Tools
 
-#### 2.6 END
-* **Role**: Explicit termination
-* **What it does**
-    * Ends execution when:
-        * the agent has asked the user for input
-        * or the task is completed
-* **Why it exists**
-> Makes the lifecycle of the agent explicit and observable.
+### Image Extractor
+Extracts receipt contents as structured data.
 
-### Tools
-
-#### Image Extractor
-Extracts the contents of receipt as structured document.
-
-* Test the tool:
+Test:
 ```bash
 uv run python src/tools/image_extractor.py --image-path images/receipts/invalid_receipt.jpg
 ```
-* Expected output:
+
+Expected (example):
 ```json
 {
   "is_receipt": true,
@@ -137,25 +157,12 @@ uv run python src/tools/image_extractor.py --image-path images/receipts/invalid_
       "quantity": 1.0,
       "unit_price": 235.45,
       "line_total": 235.45
-    },
-    {
-      "description": "Booking Fee",
-      "quantity": 1.0,
-      "unit_price": 24.66,
-      "line_total": 24.66
-    },
-    {
-      "description": "User Adjustment due to Labor Law",
-      "quantity": 1.0,
-      "unit_price": 6.34,
-      "line_total": 6.34
-    },
-    {
-      "description": "Discounts and Adjustments",
-      "quantity": 1.0,
-      "unit_price": -68.48,
-      "line_total": -68.48
     }
   ]
 }
 ```
+
+## Troubleshooting
+- If the bot exits immediately, confirm `TELEGRAM_BOT_TOKEN` is set.
+- If DB init fails, check `DATABASE_URL` or leave it unset for a demo run.
+- If MinIO upload fails, set `MINIO_*` vars or skip file uploads.
