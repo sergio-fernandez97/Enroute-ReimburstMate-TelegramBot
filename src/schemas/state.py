@@ -42,7 +42,7 @@ class WorkflowState(BaseModel):
     )
     status_rows: list[dict[str, Any]] | None = Field(
         default=None,
-        description="Status rows (likely from a DB/query) used to build a response.",
+        description="Status rows from SQL DB used to build a response. Includes json non-serialisable types.",
     )
     response_text: str | None = Field(
         default=None,
