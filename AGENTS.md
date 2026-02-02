@@ -46,7 +46,7 @@ Guidelines for coding agents working in this repository during a workshop that d
     class DbHandler:
         """Handles database read/write for expenses."""
 
-        def __call__(self, state, config):
+        def __call__(self, state):
             """Run the node.
 
             Args:
@@ -58,13 +58,13 @@ Guidelines for coding agents working in this repository during a workshop that d
             """
             logging.info("DbHandler input state=%s", state)
             expense = self._normalize(state)
-            return self._persist(expense, config)
+            return self._persist(expense)
 
         def _normalize(self, state):
             """Normalize incoming state into an expense object."""
             return state
 
-        def _persist(self, expense, config):
+        def _persist(self, expense):
             """Write the expense and return updated state."""
             return expense
     ```
