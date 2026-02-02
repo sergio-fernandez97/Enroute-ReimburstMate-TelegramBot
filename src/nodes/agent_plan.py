@@ -2,7 +2,6 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
@@ -17,23 +16,22 @@ PROMPT = PROMPT_PATH.read_text(encoding="utf-8").strip()
 class AgentPlan:
     """Plans the next action based on the user input and current state."""
 
-    def __call__(self, state: WorkflowState, config: Dict[str, Any]) -> WorkflowState:
+    def __call__(self, state: WorkflowState) -> WorkflowState:
         """Run the node.
 
         Args:
             state: Current workflow state.
-            config: Node configuration.
 
         Returns:
             Updated workflow state.
         """
         logging.info("AgentPlan input state=%s", state)
-        return self._plan(state, config)
+        return self._plan(state)
 
-    def _plan(self, state: WorkflowState, config: Dict[str, Any]) -> WorkflowState:
+    def _plan(self, state: WorkflowState) -> WorkflowState:
         """Plan the next action using an LLM with structured output."""
         formatted_state = self._format_state_for_prompt(state)
-        llm = self._get_llm(config)
+        llm = self._get_llm()
         llm_with_structure = llm.with_structured_output(AgentPlanResponse)
 
         prompt = ChatPromptTemplate.from_messages(
@@ -48,9 +46,9 @@ class AgentPlan:
         logging.info("AgentPlan selected next_action=%s", result.next_action)
         return state.model_copy(update={"next_action": result.next_action})
 
-    def _get_llm(self, config: Dict[str, Any]) -> ChatOpenAI:
+    def _get_llm(self) -> ChatOpenAI:
         """Create the chat model for planning."""
-        model = config.get("model", "gpt-4o-mini")
+        model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
         api_key = os.environ.get("OPENAI_API_KEY")
         return ChatOpenAI(model=model, api_key=api_key)
 
