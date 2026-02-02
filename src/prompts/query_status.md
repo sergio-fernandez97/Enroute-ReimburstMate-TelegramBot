@@ -26,5 +26,7 @@ Instructions:
 - Use any filters implied by the user_input (date ranges, merchant, amount, status)
 - If the user asks for "recent" or "latest", limit to a small, sensible window
 - If there is not enough information for a specific filter, keep the query broad
-- For every query, mention the query language (e.g., SQL/PostgreSQL)
-- Output only the queries needed to answer the user
+- Output only SQL SELECT queries (PostgreSQL dialect)
+- Do not add labels, prefixes, or commentary around the SQL
+- Use the provided user message to decide which filters and limits are needed
+- If no query is needed, return an empty list
