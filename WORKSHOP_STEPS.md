@@ -19,13 +19,13 @@
     - Prompts:
         - Image Extractor
         - Agent Plan Response
-    - [AGENTS.md](http://AGENTS.md): guidelines for the coding assistant.
+    - [AGENTS.md](./AGENTS.md): guidelines for the coding assistant.
 
 ### What’s going to be done in the Workshop
 
 1. Configure your own bot
 2. Connect your bot with your dummy app.
-3. Show the [AGENTS.md](http://AGENTS.md)
+3. Show the [AGENTS.md](./AGENTS.md)
 4. Show the workflow in a diagram. Take a screenshot and give it to codex in order to create the agent with LangGraph (empty nodes).
 > [Image #1] Use Context7 to fetch the official LangGraph documentation. Look at the diagram in the image, which represents the workflow we want to build. Help me populate the nodes and include the graph in
 src/graph/graph.py. Leave the logic of each node empty, we will work on that later.
