@@ -1,4 +1,4 @@
-## Enroute ReimburstMate Bot Workshop
+## Enroute ReimburseMate Bot Workshop
 
 Build a Telegram bot that routes user messages (text + receipts) through a LangGraph workflow. The goal is to show how Codex can accelerate safe, incremental development.
 
