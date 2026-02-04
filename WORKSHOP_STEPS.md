@@ -24,9 +24,10 @@
 ### What’s going to be done in the Workshop
 
 1. Configure your own bot
-2. Connect your bot with your dummy app.
-3. Show the [AGENTS.md](./AGENTS.md)
-4. Show the workflow in a diagram. Take a screenshot and give it to codex in order to create the agent with LangGraph (empty nodes).
+2. Clone this repo: git clone -b workshop-feb-3 git@github.com:sergio-fernandez97/Enroute-ReimburseMate-TelegramBot.git
+3. Connect your bot with your dummy app.
+4. Show the [AGENTS.md](./AGENTS.md)
+5. Show the workflow in a diagram. Take a screenshot and give it to codex in order to create the agent with LangGraph (empty nodes).
 > [Image #1] Use Context7 to fetch the official LangGraph documentation. Look at the diagram in the image, which represents the workflow we want to build. Help me populate the nodes and include the graph in
 src/graph/graph.py. Leave the logic of each node empty, we will work on that later.
 > 
