@@ -12,6 +12,8 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 from src.db import init_db_from_env
+from src.graph.graph import build_graph
+from src.schemas.state import WorkflowState
 from src.tools.minio_storage import get_minio_client, upload_bytes
 
 load_dotenv()
@@ -25,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 # Load bot token from environment variable
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+workflow = build_graph()
 
 
 def _extract_response_text(result: object) -> str | None:
@@ -32,6 +35,23 @@ def _extract_response_text(result: object) -> str | None:
     if isinstance(result, dict):
         return result.get("response_text")
     return getattr(result, "response_text", None)
+
+
+def _build_state(
+    update: Update,
+    user_input: str | None,
+    file_id: str | None = None,
+) -> WorkflowState:
+    """Build workflow state payload from a Telegram update."""
+    user = update.effective_user
+    return WorkflowState(
+        user_input=user_input,
+        file_id=file_id,
+        telegram_user_id=str(user.id),
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name,
+    )
 
 
 # ==================== COMMAND HANDLERS ====================
@@ -104,15 +124,10 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     # Log the message
     logger.info(f"Text from {user_name} ({user_id}): {text[:50]}...")
     
-    # Echo back with metadata
-    response = f"""
-    ✅ Got your text message!
-    
-    👤 From: {user_name}
-    📝 Length: {len(text)} characters
-    💬 Preview: {text[:100]}{'...' if len(text) > 100 else ''}
-    """
-    await update.message.reply_text(response)
+    state = _build_state(update, user_input=text)
+    result = workflow.invoke(state.model_dump())
+    response_text = _extract_response_text(result) or "✅ Thanks! I've logged your message."
+    await update.message.reply_text(response_text)
 
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -165,18 +180,10 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     logger.info(f"Uploaded file id: {uploaded_file_id}")
 
-    width = photo.width
-    height = photo.height
-    response = f"""
-    🖼️ Got your image!
-    
-    📐 Dimensions: {width}x{height} pixels
-    📦 File size: {file_size / 1024:.2f} KB
-    📝 Caption: {caption}
-    
-    Use /get_image to download the original
-    """
-    await update.message.reply_text(response)
+    state = _build_state(update, user_input=caption, file_id=uploaded_file_id or file_id)
+    result = workflow.invoke(state.model_dump())
+    response_text = _extract_response_text(result) or "🖼️ Thanks! I've received your image."
+    await update.message.reply_text(response_text)
 
 # ==================== ERROR HANDLER ====================
 
