@@ -24,7 +24,17 @@
 ### What’s going to be done in the Workshop
 
 1. Configure your own bot
-2. Clone this repo: git clone -b workshop-feb-3 git@github.com:sergio-fernandez97/Enroute-ReimburseMate-TelegramBot.git
+    * Open Telegram and message `@BotFather`. 
+     Send `/start`, then `/newbot`.
+    *  Choose a display name (e.g., "Enroute ReimburseMate Bot").
+    * Choose a username (e.g., `enroute_reimburse_bot`).
+    * Save the token and add it to `TELEGRAM_BOT_TOKEN` in `.env`.
+    
+    ![bot_father](./images/bot_father.png)
+2. Clone this repo: 
+```bash
+git clone -b workshop-feb-3 git@github.com:sergio-fernandez97/Enroute-ReimburseMate-TelegramBot.git
+```
 3. Connect your bot with your dummy app.
 4. Show the [AGENTS.md](./AGENTS.md)
 5. Show the workflow in a diagram. Take a screenshot and give it to codex in order to create the agent with LangGraph (empty nodes).

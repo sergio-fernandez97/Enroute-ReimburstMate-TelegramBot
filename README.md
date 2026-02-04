@@ -56,11 +56,13 @@ MINIO_BUCKET=reimburstmate
 ## Setup
 
 ### 1) Create your Telegram bot
-1. Open Telegram and message `@BotFather`.
+1. Open Telegram and message `@BotFather`. 
 2. Send `/start`, then `/newbot`.
-3. Choose a display name (e.g., "Enroute ReimburstMate Bot").
+3. Choose a display name (e.g., "Enroute ReimburseMate Bot").
 4. Choose a username (e.g., `enroute_reimburse_bot`).
 5. Save the token and add it to `TELEGRAM_BOT_TOKEN` in `.env`.
+
+![bot_father](./images/bot_father.png)
 
 ### 2) Install dependencies
 Use your preferred Python toolchain:
