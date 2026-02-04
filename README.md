@@ -66,6 +66,7 @@ MINIO_BUCKET=reimburstmate
 
 ### 2) Install dependencies
 Use your preferred Python toolchain:
+
 ```bash
 # Option A (uv)
 uv sync
