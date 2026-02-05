@@ -55,7 +55,7 @@ This is not an intro to Python or LLM theory.
 ## Workshop steps (detailed)
 1. Clone this repo:
    ```bash
-   git clone -b baseline git@github.com:sergio-fernandez97/Enroute-ReimburseMate-TelegramBot.git
+   git clone -b workshop git@github.com:sergio-fernandez97/Enroute-ReimburseMate-TelegramBot.git
    ```
 2. Configure your own bot:
    - Open Telegram and message `@BotFather`.
