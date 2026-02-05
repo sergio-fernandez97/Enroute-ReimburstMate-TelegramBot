@@ -22,16 +22,28 @@
     - [AGENTS.md](./AGENTS.md): guidelines for the coding assistant.
 
 ### What’s going to be done in the Workshop
-
-1. Configure your own bot
-2. Clone this repo: git clone -b workshop-feb-3 git@github.com:sergio-fernandez97/Enroute-ReimburseMate-TelegramBot.git
-3. Connect your bot with your dummy app.
+1. Clone this repo: 
+```bash
+git clone -b workshop-feb-3 git@github.com:sergio-fernandez97/Enroute-ReimburseMate-TelegramBot.git
+```
+2. Configure your own bot
+    * Open Telegram and message `@BotFather`. 
+     Send `/start`, then `/newbot`.
+    *  Choose a display name (e.g., "Enroute ReimburseMate Bot").
+    * Choose a username (e.g., `enroute_reimburse_bot`).
+    * Save the token and add it to `TELEGRAM_BOT_TOKEN` in `.env`.
+    
+    ![bot_father](./images/bot_father.png)
+3. Lauch your app and test it with telegram: 
+```bash
+docker compose up --build
+```
 4. Show the [AGENTS.md](./AGENTS.md)
 5. Show the workflow in a diagram. Take a screenshot and give it to codex in order to create the agent with LangGraph (empty nodes).
 > [Image #1] Use Context7 to fetch the official LangGraph documentation. Look at the diagram in the image, which represents the workflow we want to build. Help me populate the nodes and include the graph in
 src/graph/graph.py. Leave the logic of each node empty, we will work on that later.
 > 
-5.  Show the state: Pydantic model
+6.  Show the state: Pydantic model
 **The information that is flowing through all the agent process.**
 At `src/schemas/state.py`
 ```python
@@ -95,7 +107,7 @@ class WorkflowState(BaseModel):
         description="Final response text to send back to the user.",
     )
 ```
-7. Validate the code of created: plot the graph in a notebook
+7. Validate the code of created (optional): plot the graph in a notebook 
 > Use Context7 to fetch the official LangGraph documentation. And create a notebook named graph.ipynb. In one cell comile the graph (from src.graph.graph import graph) as "app". The plot the complete graph.
 > 
 8. Create the brain node (agent plan).
