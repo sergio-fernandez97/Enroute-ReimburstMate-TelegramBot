@@ -29,6 +29,91 @@ This is not an intro to Python or LLM theory.
 8. Orchestrate the creation of nodes: `extract_receipt`, `query_status`, `render_and_post`, `upsert_expense`
 9. Compile and test the full graph.
 
+## Before the workshop
+
+### Prerequisites
+- Python installed
+- Visual Studio Code (optional)
+- Codex installed
+- `OPENAI_API_KEY` set
+- Docker installed
+
+### What’s already done
+- Service skeleton
+- Schemas:
+  - State
+  - Receipt
+  - AgentPlanResponse
+- Docker compose configuration
+- Tools:
+  - Image Extractor
+- Prompts:
+  - Image Extractor
+  - Agent Plan Response
+- [AGENTS.md](./AGENTS.md): guidelines for the coding assistant
+
+## Workshop steps (detailed)
+1. Clone this repo:
+   ```bash
+   git clone -b workshop-feb-3 git@github.com:sergio-fernandez97/Enroute-ReimburseMate-TelegramBot.git
+   ```
+2. Configure your own bot:
+   - Open Telegram and message `@BotFather`.
+   - Send `/start`, then `/newbot`.
+   - Choose a display name (e.g., "Enroute ReimburseMate Bot").
+   - Choose a username (e.g., `enroute_reimburse_bot`).
+   - Save the token and add it to `TELEGRAM_BOT_TOKEN` in `.env`.
+
+   ![bot_father](./images/bot_father.png)
+3. Launch your app and test it with Telegram:
+   ```bash
+   docker compose up --build
+   ```
+4. Review the [AGENTS.md](./AGENTS.md).
+5. Install the MCP server ![Context7](https://context7.com) for codex:
+```bash 
+codex mcp add context7 -- npx -y @upstash/context7-mcp
+```
+6. Show the workflow in a diagram. Take a screenshot and give it to Codex to create the agent with LangGraph (empty nodes).
+   ```
+   Use Context7 to fetch the official LangGraph documentation. Look at the diagram in the image, which represents the workflow we want to build. Help me populate the nodes and include the graph in src/graph/graph.py. Leave the logic of each node empty, we will work on that later.
+   ```
+7. Show the state: Pydantic model (information flowing through the process) at `src/schemas/state.py`.
+8. Validate the created code (optional): plot the graph in a notebook.
+   ```
+   Use Context7 to fetch the official LangGraph documentation. And create a notebook named graph.ipynb. In one cell compile the graph (from src.graph.graph import graph) as "app". Then plot the complete graph.
+   ```
+9. Create the brain node (agent plan).
+   ```
+   Use Context7 to fetch the official LangGraph and LangChain documentation. And fill the node @src/nodes/agent_plan.py. Load the prompt in @src/prompts/agent_plan.md and create chain with the structured output in @src/schemas/agent_plan.py, then format the state in order to complete the prompt. Afterwards invoke the llm with structured output, extract the field next action and update the state.
+   ```
+10. Test image extractor tool (script:![image_extractor.py](./src/tools/image_extractor.py)):
+```bash
+uv run python src/tools/image_extractor.py --
+```
+11. With multi-agent functionality create the nodes: `extract_receipt`, `query_status`, `render_and_post`, `upsert_expense`.
+    11.1 `extract_receipt`:
+     ```
+     Use Context7 to fetch the official LangGraph documentation. Fill the node @src/nodes/extract_receipt.py. Read the node description at @README.md. Then load the bytes of the image given the file_id in the state, call the tool for extracting the information from the file: @src/tools/images_extractor.py and then fill receipt_json with the information.
+     ```
+    11.2 `query_status`:
+     ```
+     Fill the node @src/nodes/query_status.py. Read the node description at @README.md. Load the prompt from @src/prompts/query_status.md and create a chain with the structured output given by @src/schemas/query_status.py, then include the user message in the request to the llm. Invoke the llm, extract the field queries if it is not null use the queries for retrieving the need information and fill the state field named status_rows.
+     ```
+    11.3 `render_and_post`:
+     ```
+     Fill the node @src/nodes/post_and_render.py. Read the node description at @README.md. Load the prompt from @src/prompts/post_and_render.md and create a chain with structured output given by @src/schemas/post_and_render.py, then include the current state in the request of the llm. Invoke the llm, extract the field response_text and update the state.
+     ```
+    11.4 `upsert_expense`:
+     ```
+     Fill the node @src/nodes/upsert_expense.py. Read the node description at @README.md. Upsert the needed information from state in sql tables and update state with expense_id.
+     ```
+12. Compile the graph in the app (use https://chatgpt.com/codex if helpful):
+    ```
+    Import the graph from @src/graph/graph.py into @app.py and compile it. In @app.py modify the coroutines handle_text and handle_photo in order append the file and telegram user information to the state and then to invoke the graph. Afterwards extract the response from the workflow and return it to telegram.
+    ```
+13. Test the bot and fix troubleshootings.
+
 ## Prerequisites
 - Python 3.13+
 - A Telegram bot token
@@ -62,33 +147,12 @@ MINIO_BUCKET=reimburstmate
 4. Choose a username (e.g., `enroute_reimburse_bot`).
 5. Save the token and add it to `TELEGRAM_BOT_TOKEN` in `.env`.
 
-![bot_father](./images/bot_father.png)
-
 ### 2) Install dependencies
 Use your preferred Python toolchain:
 
 ```bash
 # Option A (uv)
 uv sync
-
-# Option B (pip)
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-### 3) Run the bot
-```bash
-uv run python app.py
-```
-
-You should see:
-- "Bot is running! Press Ctrl+C to stop."
-
-### 4) (Optional) Connect Codex to Context7
-Context7 is a free MCP server for developer docs.
-```bash
-codex mcp add context7 -- npx -y @upstash/context7-mcp
 ```
 
 ## Repo map (quick)
